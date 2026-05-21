@@ -1878,37 +1878,22 @@
       return `${d}/${m}/${y}`;
     }
 
-    async function loadTasks() {
-      
-      await normalizeTaskStatuses();
-
-      const { data } = await supabase
-        .from("tasks")
-        .select(`
-          *,
-          app_users ( name ),
-          reunioes ( name )
-        `)
-        .order("data_programada");
-
-      allTasks = data || [];
-
-      // Preserve current filter values
-      const currentSearch = document.getElementById("taskSearchInput").value;
-      const currentStatus = document.getElementById("taskStatusFilter").value;
-      const currentUser = document.getElementById("taskUserFilter").value;
-      const currentMeeting = document.getElementById("taskMeetingFilter").value;
-
-      populateTaskFilters(allTasks);
-
-      // Restore filter values
-      document.getElementById("taskSearchInput").value = currentSearch;
-      document.getElementById("taskStatusFilter").value = currentStatus;
-      document.getElementById("taskUserFilter").value = currentUser;
-      document.getElementById("taskMeetingFilter").value = currentMeeting;
-
-      applyTaskFilters();
-    }
+  async function loadTasks() {
+    const res = await fetch("/api/db", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        action: "getTasks"
+      })
+    });
+  
+    const data = await res.json();
+  
+    allTasks = data || [];
+    applyTaskFilters();
+  }
 
     document.addEventListener("input", e => {
       if (
