@@ -1,0 +1,3200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SGR - Sistema de Gerenciamento de Reuniões</title>
+
+  <style>
+    :root {
+      --primary-color: rgb(255, 102, 0);
+      --aditional-color-1: rgb(223, 8, 16);
+      --aditional-color-2: rgb(255, 229, 8);
+      --primary-font-color: #fff;
+      --secondary-bg: #f9f9f9;
+      --border-color: rgba(255, 102, 0, 0.3);
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0 10px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h2 {
+      text-align: center;
+      color: #000;
+    }
+
+    .body-hr{
+      border: none;
+      border-top: 1px solid var(--aditional-color-2);
+      height: 2px;
+      background-color: var(--aditional-color-2);
+      margin: 8px 0;
+    }
+    
+    .card-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+
+      justify-content: flex-start;
+      align-items: flex-start;
+
+      gap: 20px;
+
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+
+      overflow-y: auto;
+      padding-top: 5px;
+    }
+
+    .main-layout {
+      display: flex;
+      gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .left-panel,
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .left-panel {
+      flex: 0 0 320px;
+      min-width: 280px;
+      max-width: 320px;
+    }
+
+    .right-panel {
+      flex: 1 1 0;
+      min-width: 280px;
+      max-height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+
+    #reuniaoUpButtons {
+      width: 100%;
+      display: flex;
+      gap: 8px;
+      justify-content: space-around;
+      margin-bottom: 4px;
+    }
+
+    #reuniaoUpButtons button {
+      flex: 1;
+      min-width: 30px;
+      padding: 2px;
+    }
+
+    #reuniaoUpButtons span {
+      font-size: 24px;
+    }
+
+    .modal-overlay {
+      z-index: 100;
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: var(--secondary-bg);
+      padding: 25px;
+      width: 400px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    .hidden-select {
+      display: none;
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      max-height: 160px;
+      overflow-y: auto;
+
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .checkbox-item input {
+      transform: scale(1.1);
+    }
+
+    .top-left-actions {
+      position: sticky;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+
+      display: flex;
+      gap: 8px;
+    }
+
+    .add-reuniao-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      height: 31px;
+      width: 44px;
+      padding: 0 14px;
+
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+
+      background-color: var(--primary-color);
+      color: #fff;
+
+      overflow: hidden;
+      white-space: nowrap;
+
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+
+      transition:
+        width 0.25s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .add-reuniao-btn .icon {
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .add-reuniao-btn .label {
+      font-size: 14px;
+      font-weight: bold;
+      opacity: 0;
+      transform: translateX(-4px);
+
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .add-reuniao-btn:hover,
+    .add-reuniao-btn:focus-visible {
+      width: 260px;
+      background-color: var(--aditional-color-2);
+      color: #000;
+    }
+
+    .add-reuniao-btn:hover .label,
+    .add-reuniao-btn:focus-visible .label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .search-input {
+      display: flex;
+      align-items: center;
+
+      height: 31px;
+      width: 44px;
+      padding: 0 14px;
+
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+
+      background-color: var(--primary-color);
+      color: #fff;
+
+      overflow: hidden;
+      white-space: nowrap;
+
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+
+      transition:
+        width 0.25s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+      opacity: 1;
+      transform: translateX(0);
+
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .search-input:hover,
+    .search-input:focus {
+      width: 200px;
+      background-color: var(--aditional-color-2);
+      color: #000;
+    }
+
+    .search-input:hover::placeholder,
+    .search-input:focus::placeholder {
+      opacity: 1;
+      transform: translateX(0);
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    .add-reuniao-btn:hover ~ .search-input,
+    .add-reuniao-btn:focus-visible ~ .search-input {
+      width: 44px;
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
+    .add-reuniao-btn:hover ~ .search-input::placeholder,
+    .add-reuniao-btn:focus-visible ~ .search-input::placeholder {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    
+    .add-reuniao-btn:hover {
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .form-select {
+      height: 30px;
+      margin-bottom: 0px;
+      padding-bottom: 0px;
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .footerButtonsModal,
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* CSS FOR FOOTERBUTTONS AND BUTTON GROUP BUTTONS */
+    .footerButtonsModal button,
+    .button-group button {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .btn-add-user {
+      flex: 1;
+      background-color: var(--aditional-color-2);
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .btn-remove-user {
+      flex: 1;
+      background-color: var(--aditional-color-1);
+      color: #fff;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      flex: 1;
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      background-color: #ccc;
+      border: none;
+      padding: 10px;
+    }
+
+    .user-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    #appRoot {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .logout-btn {
+      background-color: var(--aditional-color-1);
+      color: #fff;
+      border: none;
+      padding: 2px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+
+    .logout-btn:hover {
+      background-color: rgba(223, 8, 16, 0.8);
+    }
+
+    /* MEETING CARDS */
+    
+    .main-card-wrapper {
+      width: 290px;
+      height: 278px;
+      background: var(--primary-color);
+      box-sizing: border-box;
+      border-radius: 8px;
+    }
+
+    .meeting-id {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background-color: var(--aditional-color-1);
+      color: #fff;
+      font-weight: bold;
+      border-radius: 8px;
+      font-size: 32px;
+      line-height: 1;
+      overflow: hidden;
+      word-break: break-all;
+    }
+
+    .top-card-wrapper {
+      display: flex;
+      align-items: center;
+      height: 50px;
+      gap: 4px;
+      min-width: 0;
+      margin: 4px;
+    }
+
+    .meeting-name {
+      flex: 1;
+      min-width: 0;
+      height: 50px;
+
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 14px;
+      line-height: 21px;
+
+      padding: 6px 8px;
+      box-sizing: border-box;
+
+      color: #fff;
+      font-weight: bold;
+      background-color: var(--aditional-color-1);
+      border-radius: 8px;
+
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .outer-center-card-wrapper {
+      background-color: var(--aditional-color-2);
+      padding: 8px;
+    }
+
+    .bottom-card-wrapper {
+      padding: 0 10px 10px;
+      clip-path: polygon(
+        0 0,
+        100% 0,
+        100% 80%,
+        95% 100%,
+        5% 100%,
+        0 80%
+      );
+      display: flex;
+      justify-content: center;
+    }
+
+    .edit-btn {
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .edit-btn:hover {
+      background-color: rgba(255, 102, 0, 0.8);
+    }
+
+    .delete-btn {
+      background-color: var(--aditional-color-1);
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .delete-btn:hover {
+      background-color: rgba(223, 8, 16, 0.8);
+    }
+
+    .history-btn {
+      background-color: var(--aditional-color-2);
+      color: #000;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .history-btn:hover {
+      background-color: rgba(255, 229, 8, 0.8);
+    }
+
+    /* Custom Radio Button Styles */
+    .customCheckBoxHolder {
+      display: flex;
+      width: 100%;
+    }
+
+
+    .customCheckBox {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+      padding: 2px 8px;
+      /* background-color: rgba(0, 0, 0, 0.16); */
+      color: rgba(255, 255, 255, 0.7);
+      transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+      transition-duration: 300ms;
+      transition-property: color, background-color, box-shadow;
+      display: flex;
+      height: 32px;
+      align-items: center;
+      box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 1px 0px inset, rgba(255, 255, 255, 0.17) 0px 1px 1px 0px;
+      outline: none;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .customCheckBox:hover {
+      background-color: var(--aditional-color-1);
+      color: white;
+      box-shadow: rgba(0, 0, 0, 0.23) 0px -4px 1px 0px inset, rgba(255, 255, 255, 0.17) 0px -1px 1px 0px, rgba(0, 0, 0, 0.17) 0px 2px 4px 1px;
+    }
+
+    .customCheckBox .inner {
+      font-size: 14px;
+      font-weight: 900;
+      pointer-events: none;
+      transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+      transition-duration: 300ms;
+      transition-property: transform;
+      transform: translateY(0px);
+    }
+
+    .customCheckBox:hover .inner {
+      transform: translateY(-2px);
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: var(--aditional-color-1);
+      border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: var(--aditional-color-1)
+    }
+
+    .customCheckBoxWrapper {
+      flex: 1;
+    }
+
+    .customCheckBox {
+      /* background-color: rgba(255, 255, 255, 0.15); */
+      color: rgba(255, 255, 255, 0.85);
+      border-radius: 6px;
+
+      /* box-shadow:
+        rgba(0, 0, 0, 0.15) 0px 2px 1px inset; */
+    }
+
+    .customCheckBoxWrapper:first-of-type .customCheckBox {
+      border-radius: 5px 0 0 5px;
+      border-right: 0px;
+    }
+
+    .customCheckBoxWrapper:not(:first-of-type):not(:last-of-type) .customCheckBox {
+      border-radius: 0;
+    }
+
+    .customCheckBoxWrapper:last-of-type .customCheckBox {
+      border-radius: 0 5px 5px 0;
+      border-left: 0px;
+    }
+
+    .customCheckBoxInput {
+      display: none;
+    }
+
+    
+    .customCheckBoxInput:checked
+    + .customCheckBoxWrapper
+    .customCheckBox {
+      background-color: var(--aditional-color-2);
+      color: #000;
+      box-shadow:
+        rgba(0, 0, 0, 0.25) 0px 4px 8px;
+    }
+
+
+    .customCheckBoxInput:checked + .customCheckBoxWrapper .customCheckBox .inner {
+      transform: translateY(-2px);
+    }
+
+    .customCheckBoxInput:checked + .customCheckBoxWrapper .customCheckBox:hover {
+      background-color: rgba(255, 102, 0, 0.8);
+      box-shadow: rgba(0, 0, 0, 0.26) 0px -4px 1px 0px inset, rgba(255, 255, 255, 0.17) 0px -1px 1px 0px, rgba(0, 0, 0, 0.15) 0px 3px 6px 2px;
+    }
+
+    .inner-center-card-wrapper {
+      background-color: var(--primary-color);
+      border-radius: 8px;
+      padding: 8px;
+      max-height: 120px;
+      min-height: 120px;
+      overflow-y: auto;
+    }
+
+    .inner-center-card-wrapper p{
+      
+      position: relative;
+      margin: 4px 0;
+      padding-bottom: 4px;
+
+      font-size: 16px;
+      color: #fff;
+      text-align: center;
+      word-wrap: break-word;
+      font-weight: bold;
+    }
+
+    
+    .inner-center-card-wrapper p:not(:last-child)::after {
+      content: "";
+      display: block;
+      width: 50%;
+      margin: 6px auto 0;
+      border-bottom: 1px dashed var(--aditional-color-2);
+    }
+
+    .main-card-wrapper hr {
+      border: none;
+      border-top: 1px solid var(--aditional-color-2);
+      height: 2px;
+      background-color: var(--aditional-color-2);
+      margin: 8px 0;
+    }
+
+    /* RIGHT PANEL */
+    .right-tabs-header {
+      display: flex;
+      gap: 6px;
+      flex-wrap: nowrap;
+      align-items: center;
+      width: 100%;
+
+      position: sticky;
+      top: 0;
+      z-index: 3;
+
+      background-color: #f4f4f4;
+      padding: 12px 0;
+      box-sizing: border-box;
+
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+    }
+
+    .right-tabs-header button {
+      flex: 0 0 auto;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      background-color: #ddd;
+    }
+
+    .right-tabs-header button.active {
+      background-color: transparent;
+      color: #000000 !important;
+    }
+
+    .right-tabs-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      position: relative;
+      padding-right: 10px;
+    }
+
+    .right-tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .right-tab-panel.active {
+      display: flex;
+    }
+
+    .right-tab-header {
+      display: inline-flex;
+      align-items: center;
+      height: 100%;
+      gap: 6px;
+
+      width: fit-content;
+      max-width: 220px;
+
+      background-color: var(--primary-color);
+      border-radius: 8px;
+
+      box-sizing: border-box;
+    }
+
+    .right-tab-header.active {
+      background-color: var(--aditional-color-2);
+    }
+
+    .taskBtn {
+      flex: 1;
+      border: none;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 8px;
+      background-color: var(--primary-color);
+      color: #fff;
+      font-size: 14px;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      font-weight: bold;
+      min-width: 0;
+    }
+
+    .taskBtn:hover {
+      transform: translateY(-1px);
+      background-color: rgba(255, 102, 0, 0.9);
+    }
+
+    .tasks-list {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-card {
+      background-color: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-card hr {
+      border: none;
+      border-top: 1px solid var(--border-color);
+      margin: 0;
+    }
+
+    .task-card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .task-card strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .task-card small {
+      color: #444;
+      line-height: 1.4;
+    }
+
+    .task-card span {
+      display: inline-block;
+      color: #222;
+    }
+
+    .task-details {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-details-top {
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+    }
+
+    .task-details.expanded {
+      max-height: 500px;
+    }
+
+    .task-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--primary-color);
+      font-size: 14px;
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .task-toggle:hover {
+      color: var(--aditional-color-1);
+    }
+
+    .task-toggle .arrow {
+      transition: transform 0.3s ease;
+    }
+
+    .task-toggle.expanded .arrow {
+      transform: rotate(180deg);
+    }
+
+    .meeting-resume {
+      position: relative;
+      color: #333;
+      line-height: 1.5;
+      overflow: hidden;
+
+      max-height: 7.5em; /* collapsed height */
+      transition: max-height 0.3s ease;
+    }
+
+    .meeting-resume.expanded {
+      max-height: 1000px;
+    }
+
+
+    .meeting-resume-toggle {
+      margin-top: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--primary-color);
+      padding: 0;
+      align-self: flex-start;
+    }
+
+    
+    #historicoList {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 6px 0;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+
+    .presence-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+
+      flex-direction: row-reverse;
+    }
+
+    /* Hide native checkbox */
+    .presence-toggle input {
+      display: none;
+    }
+
+    /* Toggle body */
+    .presence-toggle .toggle-ui {
+      width: 42px;
+      height: 22px;
+      background: #ccc;
+      border-radius: 999px;
+      position: relative;
+      transition: background-color 0.25s ease;
+    }
+
+    /* Toggle knob */
+    .presence-toggle .toggle-ui::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.25s ease;
+    }
+
+    /* Checked (PRESENTE) */
+    .presence-toggle input:checked + .toggle-ui {
+      background: #2ecc71; /* green */
+    }
+
+    .presence-toggle input:checked + .toggle-ui::after {
+      transform: translateX(20px);
+    }
+
+    /* Label coloring */
+    .presence-toggle .toggle-label {
+      font-size: 13px;
+      transition: color 0.25s ease;
+    }
+
+    .presence-toggle input:checked ~ .toggle-label {
+      color: #2ecc71;
+    }
+
+    .presence-toggle input:not(:checked) ~ .toggle-label {
+      color: #e74c3c;
+    }
+
+    /* HEADER */
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 6px 4px;
+      margin-bottom: 4px;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .app-title {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .app-subtitle {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .manage-users-link {
+      background: none;
+      border: none;
+      padding: 4px 0;
+      font-weight: bold;
+      color: var(--primary-color);
+      cursor: pointer;
+      align-self: flex-start;
+    }
+
+    .users-manager-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .user-row span {
+      font-weight: bold;
+    }
+
+    .user-row button {
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .user-row .edit {
+      background: var(--aditional-color-2);
+    }
+
+    .user-row .delete {
+      background: var(--aditional-color-1);
+      color: #fff;
+    }
+
+    /* LOADING OVERLAY */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .loading-wave {
+      width: 300px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .loading-bar {
+      width: 20px;
+      height: 10px;
+      margin: 0 5px;
+      background-color: var(--primary-color);
+      border-radius: 5px;
+      animation: loading-wave-animation 1s ease-in-out infinite;
+    }
+
+    .loading-bar:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .loading-bar:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .loading-bar:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes loading-wave-animation {
+      0% {
+        height: 10px;
+      }
+      50% {
+        height: 50px;
+      }
+      100% {
+        height: 10px;
+      }
+    }
+
+    .app-logo {
+      width: 50px;
+      height: auto;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Vertical S G R block */
+    .app-brand-vertical {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .brand-line {
+      display: flex;
+      align-items: baseline;
+    }
+
+    .brand-line strong {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--primary-color);
+      margin-right: 4px;
+    }
+
+    .brand-line span {
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    
+    .app-brand-vertical .brand-line span {
+      opacity: 0.1;
+      transition: opacity 0.2s ease;
+    }
+
+    .app-brand-vertical:hover .brand-line span {
+      opacity: 1;
+    }
+
+    .tdContents-left {
+      width: auto;
+      white-space: nowrap;
+    }
+
+    .tdContents-right {
+      flex: 1;
+      min-width: 0;
+      border-left: 2px solid var(--primary-color);
+      padding-left: 8px;
+    }
+
+
+  </style>
+</head>
+
+<body>
+  <!-- LOGIN -->
+  <div id="loginScreen" class="modal-overlay" style="display:flex;">
+    <div class="modal-content">
+      <h3 class="modal-header">Login</h3>
+
+      <input id="loginEmail" class="form-input" placeholder="Email" />
+      <input
+        id="loginPassword"
+        type="password"
+        class="form-input"
+        placeholder="Senha"
+      />
+
+      <button class="btn-submit" onclick="login()">Entrar</button>
+    </div>
+  </div>
+  <div id="appRoot" style="display:none;">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <img
+          src="https://jltjldjzhsswrxmsorkx.supabase.co/storage/v1/object/public/logo/logo 2.png"
+          alt="SEARA"
+          class="app-logo"
+        />
+
+        <div id="appBrandVertical" class="app-brand-vertical">
+          <div class="brand-line">
+            <strong>S</strong><span>istema de</span>
+          </div>
+          <div class="brand-line">
+            <strong>G</strong><span>erenciamento de</span>
+          </div>
+          <div class="brand-line">
+            <strong>R</strong><span>euniões</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-bar-right">
+        <span id="userWelcome"></span>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      </div>
+    </div>
+
+    <hr class="body-hr" />
+
+    <div class="main-layout">
+      <div class="left-panel">
+        <div class="top-left-actions">
+          <input type="text" id="searchReunioes" class="search-input" placeholder="Buscar" />
+          <button class="add-reuniao-btn" onclick="addReuniao()">
+            <span class="icon">+</span>
+            <span class="label">Cadastrar nova reunião</span>
+          </button>
+        </div>
+
+        <div id="reunioesCardPicker" class="card-wrapper"></div>
+      </div>
+
+      <div class="right-panel">
+        <!-- Add right-side cards or content here -->
+        <div class="right-tabs-header" id="rightTabsHeader"></div>
+        <div class="right-tabs-body" id="rightTabsBody"></div>
+      </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+      <div class="loading-wave">
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+        <div class="loading-bar"></div>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="addReuniaoModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header">Adicionar nova reunião</h3>
+
+        <form id="addReuniaoForm">
+          <label class="form-label">Nome da reunião:</label>
+          <input id="reuniaoName" class="form-input" required />
+
+          <label class="form-label">Descrição:</label>
+          <textarea id="reuniaoDescricao" class="form-textarea" required style="resize: none;"></textarea>
+
+          <label class="form-label">Participantes:</label>
+          
+          <select
+            id="reuniaoUsersPicker"
+            class="form-select hidden-select"
+            multiple
+            required
+          ></select>
+
+          <div id="usersCheckboxList" class="checkbox-list"></div>
+
+          <button
+            type="button"
+            class="manage-users-link"
+            onclick="openUsersManagerModal()"
+          >
+            ⚙️ Gerenciar usuários
+          </button>
+
+
+          <div class="button-group">
+            <button type="submit" class="btn-submit">Salvar</button>
+            <button
+              type="button"
+              class="btn-cancel"
+              onclick="document.getElementById('addReuniaoModal').style.display='none'"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TASK MODAL -->
+    <div id="taskModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header">Nova tarefa</h3>
+
+        <label class="form-label">Descrição</label>
+        <textarea id="taskDescricao" class="form-textarea" style="resize: none;"></textarea>
+
+        <label class="form-label">Responsável</label>
+        <select id="taskOwner" class="form-select" style="padding: 0"></select>
+
+        <button
+          type="button"
+          class="manage-users-link"
+          onclick="openUsersManagerModal()"
+        >
+          ⚙️ Gerenciar usuários
+        </button>
+
+        <label class="form-label">Reunião relacionada</label>
+        <select id="taskReuniao" class="form-select" style="padding: 0">
+          <option value="">— Opcional —</option>
+        </select>
+
+        <label class="form-label">Data programada</label>
+        <input id="taskDateProgramada" type="date" class="form-input" style="max-height: 30px;"/>
+
+        <div class="button-group">
+          <button class="btn-submit" onclick="saveTask()">Salvar</button>
+          <button class="btn-cancel" onclick="closeTaskModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGE TASK DATE MODAL -->
+    <div id="changeTaskDateModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header">Alterar data prevista</h3>
+
+        <input
+          id="changeTaskDateInput"
+          type="date"
+          class="form-input"
+        />
+
+        <div class="button-group">
+          <button class="btn-submit" onclick="confirmChangeTaskDate()">
+            Salvar
+          </button>
+          <button class="btn-cancel" onclick="closeChangeTaskDateModal()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINISH TASK MODAL -->
+    <div id="finishTaskModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header">Concluir tarefa</h3>
+
+        <label class="form-label">Data de conclusão</label>
+        <input
+          id="finishTaskDateInput"
+          type="date"
+          class="form-input"
+        />
+
+        <label class="form-label">Observações</label>
+        <textarea id="finishTaskObservacoes" class="form-textarea" style="resize: none;"></textarea>
+
+        <div class="button-group">
+          <button class="btn-submit" onclick="confirmFinishTask()">
+            Concluir
+          </button>
+          <button class="btn-cancel" onclick="closeFinishTaskModal()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO MODAL -->
+    <div id="historicoModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header">Histórico da reunião</h3>
+
+        <label class="form-label">Período</label>
+
+        <div style="display:flex; gap:8px;">
+          <input type="date" id="historicoDateStart" class="form-input" />
+          <input type="date" id="historicoDateEnd" class="form-input" />
+        </div>
+
+        <div id="historicoList"></div>
+
+        <div class="button-group">
+          <button class="btn-cancel" onclick="closeHistoricoModal()">Fechar</button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- USER EDIT MODAL -->
+    <div id="usersManagerModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3 class="modal-header">Gerenciar usuários</h3>
+
+        <div id="usersManagerList" class="users-manager-list"></div>
+
+        <button class="btn-submit" onclick="addUserFromManager()">
+          + Adicionar usuário
+        </button>
+
+        <div class="button-group">
+          <button class="btn-cancel" onclick="closeUsersManagerModal()">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================
+       SUPABASE SCRIPT
+  ========================= -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    let editingReuniaoId = null;
+    let editingTaskId = null;
+    let allTasks = [];
+    const meetingTabState = {};
+    let currentUserContext = null;
+    
+    const rightTabs = {
+      current: null,
+      tabs: {},
+    };
+
+    let taskDateEditId = null;
+    let finishingTaskId = null;
+
+    // Loading overlay settings
+    let loadingDelay = 100; // ms
+    let loadingTimeout = null;
+
+    function showLoading() {
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+      loadingTimeout = setTimeout(() => {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+      }, loadingDelay);
+      return () => {
+        clearTimeout(loadingTimeout);
+        document.getElementById('loadingOverlay').style.display = 'none';
+      };
+    }
+
+    const supabase = createClient(
+      "https://jltjldjzhsswrxmsorkx.supabase.co",
+      "sb_publishable_xUu-sw85KTz0bnjXlcXbxA_6GoXXHN3"
+    );
+
+    window.login = async () => {
+      const email = loginEmail.value;
+      const password = loginPassword.value;
+
+      const hide = showLoading();
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        showApp();
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        hide();
+      }
+    };
+    
+    window.logout = async () => {
+      await supabase.auth.signOut();
+      window.location.reload();
+      hideApp();
+    };
+
+    async function showApp() {
+      const hide = showLoading();
+      try {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("appRoot").style.display = "flex";
+
+        await loadCurrentUserContext();
+
+        showWelcome();
+        loadReunioes();
+
+        createTasksTab();
+        activateRightTab("tasks");
+      } finally {
+        hide();
+      }
+    }
+
+    async function loadCurrentUserContext() {
+      const { data: auth } = await supabase.auth.getUser();
+      const user = auth?.user;
+
+      if (!user) {
+        alert("Sessão inválida");
+        return logout();
+      }
+
+      const { data, error } = await supabase
+        .from("app_users")
+        .select("id, industry_id, auth_user_id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+
+      // console.log("CTX RESULT:", data, error);
+
+      if (!data) {
+        alert(
+          "Usuário autenticado, mas não vinculado à aplicação.\n" +
+          "(auth.user.id encontrado, mas app_users bloqueado ou ausente)"
+        );
+        return logout();
+      }
+
+      currentUserContext = data;
+    }
+
+    window.openUsersManagerModal = async function () {
+      const hide = showLoading();
+      try {
+        await loadUsersManager();
+      } finally {
+        hide();
+      }
+      document.getElementById("usersManagerModal").style.display = "flex";
+    };
+
+    window.closeUsersManagerModal = function () {
+      document.getElementById("usersManagerModal").style.display = "none";
+    };
+
+    async function loadUsersManager() {
+      const { data } = await supabase
+        .from("app_users")
+        .select("*")
+        .order("name");
+
+      const list = document.getElementById("usersManagerList");
+      list.innerHTML = "";
+
+      data.forEach(u => {
+        const row = document.createElement("div");
+        row.className = "user-row";
+
+        row.innerHTML = `
+          <span>${u.name}</span>
+          <div>
+            <button class="edit">✏️</button>
+            <button class="delete">🗑️</button>
+          </div>
+        `;
+
+        row.querySelector(".edit").onclick = () => editUser(u);
+        row.querySelector(".delete").onclick = () => deleteUser(u.id);
+
+        list.appendChild(row);
+      });
+    }
+
+    window.addUserFromManager = async function () {
+      const name = prompt("Nome do usuário:");
+      if (!name) return;
+
+      const hide = showLoading();
+      try {
+        await supabase
+          .from("app_users")
+          .insert({
+                name: name.toUpperCase(),
+                industry_id: currentUserContext.industry_id
+              });
+
+
+        await loadUsersManager();
+        await populateUsersPicker(); // keeps meeting modal in sync
+
+        // Update task modal if open
+        if (document.getElementById("taskModal").style.display === "flex") {
+          await populateTaskUsers();
+        }
+      } finally {
+        hide();
+      }
+    }
+
+    window.editUser = async function (user) {
+      const newName = prompt("Novo nome:", user.name);
+      if (!newName) return;
+
+      const hide = showLoading();
+      try {
+        await supabase
+          .from("app_users")
+          .update({ name: newName.toUpperCase() })
+          .eq("id", user.id);
+
+        await loadUsersManager();
+        await populateUsersPicker();
+
+        // Update task modal if open
+        if (document.getElementById("taskModal").style.display === "flex") {
+          await populateTaskUsers();
+        }
+      } finally {
+        hide();
+      }
+    }
+
+    window.deleteUser = async function (userId) {
+      const ok = confirm("Deseja remover este usuário? Essa ação apagará todas as tarefas atribuídas a ele e sua participação em reuniões futuras e passadas.");
+      if (!ok) return;
+
+      const hide = showLoading();
+      try {
+        // Delete all tasks assigned to this user
+        await supabase.from("tasks").delete().eq("owner_id", userId);
+
+        // Delete user from all meeting participations
+        await supabase.from("reuniao_participantes").delete().eq("user_id", userId);
+
+        // Delete user presence records
+        await supabase.from("reuniao_historico_presencas").delete().eq("user_id", userId);
+
+        // Finally delete the user
+        await supabase.from("app_users").delete().eq("id", userId);
+
+        await loadUsersManager();
+        await populateUsersPicker();
+
+        // Update task modal if open
+        if (document.getElementById("taskModal").style.display === "flex") {
+          await populateTaskUsers();
+        }
+
+        alert("Usuário removido com sucesso ✅");
+      } catch (error) {
+        alert("Erro ao remover usuário: " + error.message);
+      } finally {
+        hide();
+      }
+    }
+
+
+    function syncUsersCheckboxUI() {
+      const select = document.getElementById("reuniaoUsersPicker");
+      const list = document.getElementById("usersCheckboxList");
+
+      list.innerHTML = "";
+
+      [...select.options].forEach(option => {
+        const label = document.createElement("label");
+        label.className = "checkbox-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = option.selected;
+
+        checkbox.addEventListener("change", () => {
+          option.selected = checkbox.checked;
+        });
+
+        label.appendChild(checkbox);
+        label.append(option.text);
+
+        list.appendChild(label);
+      });
+    }
+
+    function createTasksTab() {
+      if (rightTabs.tabs["tasks"]) return;
+
+      const header = document.getElementById("rightTabsHeader");
+      const body = document.getElementById("rightTabsBody");
+
+      // Header
+      const tabDiv = document.createElement("div");
+      tabDiv.className = "right-tab-header active";
+
+      const btn = document.createElement("button");
+      btn.textContent = "TAREFAS";
+      btn.onclick = () => activateRightTab("tasks");
+      btn.style.background = "transparent";
+      btn.style.border = "none";
+      btn.style.cursor = "pointer";
+      btn.style.fontWeight = "bold";
+      btn.style.color = "#000";
+
+      tabDiv.appendChild(btn);
+
+      // WHEN CLICKING ON TAREFAS btn REFRESH THE TASKS LIST AND THE FILTERS (IN CASE THERE WERE CHANGES IN THE MEETINGS OR USERS)
+      btn.addEventListener("click", async () => {
+        await loadTasks();
+        await populateTaskUsers();
+        await populateTaskReunioes();
+      });
+
+      header.appendChild(tabDiv);
+
+      // Panel
+      const panel = document.createElement("section");
+      panel.className = "right-tab-panel active";
+      panel.dataset.tab = "tasks";
+
+      
+      panel.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <input
+            type="text"
+            id="taskSearchInput"
+            placeholder="Buscar tarefas..."
+            class="form-input"
+            style="flex:2;"
+          />
+
+          <select id="taskStatusFilter" class="form-input" style="flex:1;">
+            <option value="">Status</option>
+            <option value="no prazo">NO PRAZO</option>
+            <option value="atrasada">ATRASADO</option>
+            <option value="finalizada">CONCLUÍDO</option>
+            <option value="cancelada">CANCELADO</option>
+          </select>
+
+          <select id="taskUserFilter" class="form-input" style="flex:1;">
+            <option value="">Responsável</option>
+          </select>
+
+          <select id="taskMeetingFilter" class="form-input" style="flex:1;">
+            <option value="">Reunião</option>
+          </select>
+        </div>
+
+        <button class="btn-submit" onclick="openNewTaskModal()" style="margin-top:8px;">
+          + Nova tarefa
+        </button>
+
+        <div id="tasksList" class="tasks-list"></div>
+      `;
+
+
+      body.appendChild(panel);
+
+      rightTabs.tabs["tasks"] = { btn, panel, tabDiv };
+      rightTabs.current = "tasks";
+
+      loadTasks();
+    }
+
+    window.openNewTaskModal = async function () {
+      editingTaskId = null;
+
+      document.querySelector("#taskModal .modal-header").textContent = "Nova tarefa";
+
+      resetTaskForm();
+
+      const hide = showLoading();
+      try {
+        await populateTaskUsers();
+        await populateTaskReunioes();
+      } finally {
+        hide();
+      }
+
+      document.getElementById("taskModal").style.display = "flex";
+    };
+
+    
+    window.closeTaskModal = function () {
+      editingTaskId = null;
+      resetTaskForm();
+      document.getElementById("taskModal").style.display = "none";
+    };
+
+
+    async function populateTaskUsers() {
+      const { data } = await supabase.from("app_users").select("*").order("name");
+      const sel = document.getElementById("taskOwner");
+      sel.innerHTML = "";
+
+      data.forEach(u => {
+        const o = document.createElement("option");
+        o.value = u.id;
+        o.text = u.name;
+        sel.appendChild(o);
+      });
+    }
+
+    async function populateTaskReunioes() {
+      const { data } = await supabase.from("reunioes").select("id, name");
+      const sel = document.getElementById("taskReuniao");
+      sel.innerHTML = '<option value="">— Opcional —</option>';
+
+      data.forEach(r => {
+        const o = document.createElement("option");
+        o.value = r.id;
+        o.text = `#${r.id} - ${r.name}`;
+        sel.appendChild(o);
+      });
+    }
+
+    function resetTaskForm() {
+      taskDescricao.value = "";
+      taskOwner.selectedIndex = 0;
+      taskReuniao.selectedIndex = 0;
+      taskDateProgramada.value = "";
+    }
+    
+    window.saveTask = async function () {
+      const descricao = taskDescricao.value;
+      const owner = taskOwner.value;
+      const dataProg = taskDateProgramada.value;
+      const reuniao = taskReuniao.value || null;
+
+      if (!descricao || !owner || !dataProg) {
+        alert("Preencha os campos obrigatórios");
+        return;
+      }
+
+      const hide = showLoading();
+      try {
+        if (editingTaskId) {
+          // ✅ UPDATE
+          await supabase
+            .from("tasks")
+            .update({
+              descricao,
+              owner_id: owner,
+              data_programada: dataProg,
+              reuniao_id: reuniao,
+              status: "no prazo"
+            })
+            .eq("id", editingTaskId);
+
+        } else {
+          // ✅ CREATE
+          await supabase.from("tasks").insert({
+            descricao,
+            owner_id: owner,
+            data_programada: dataProg,
+            reuniao_id: reuniao,
+            status: "no prazo",
+            industry_id: currentUserContext.industry_id
+          });
+        }
+
+        editingTaskId = null;
+        resetTaskForm();
+        closeTaskModal();
+
+        await normalizeTaskStatuses();
+        loadTasks();
+      } finally {
+        hide();
+      }
+    };
+
+    function formatDateBR(dateStr) {
+      if (!dateStr) return "-";
+      const [y, m, d] = dateStr.split("-");
+      return `${d}/${m}/${y}`;
+    }
+
+    async function loadTasks() {
+      
+      await normalizeTaskStatuses();
+
+      const { data } = await supabase
+        .from("tasks")
+        .select(`
+          *,
+          app_users ( name ),
+          reunioes ( name )
+        `)
+        .order("data_programada");
+
+      allTasks = data || [];
+
+      // Preserve current filter values
+      const currentSearch = document.getElementById("taskSearchInput").value;
+      const currentStatus = document.getElementById("taskStatusFilter").value;
+      const currentUser = document.getElementById("taskUserFilter").value;
+      const currentMeeting = document.getElementById("taskMeetingFilter").value;
+
+      populateTaskFilters(allTasks);
+
+      // Restore filter values
+      document.getElementById("taskSearchInput").value = currentSearch;
+      document.getElementById("taskStatusFilter").value = currentStatus;
+      document.getElementById("taskUserFilter").value = currentUser;
+      document.getElementById("taskMeetingFilter").value = currentMeeting;
+
+      applyTaskFilters();
+    }
+
+    document.addEventListener("input", e => {
+      if (
+        e.target.id === "taskSearchInput" ||
+        e.target.id === "taskStatusFilter" ||
+        e.target.id === "taskUserFilter" ||
+        e.target.id === "taskMeetingFilter"
+      ) {
+        applyTaskFilters();
+      }
+    });
+
+    function renderTasks(tasks) {
+      const list = document.getElementById("tasksList");
+      list.innerHTML = "";
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      tasks.forEach(t => {
+        let status = t.status;
+        if (status === "no prazo" && today > t.data_programada) {
+          status = "atrasada";
+        }
+
+        const showActions = !["finalizada", "cancelada"].includes(status);
+
+        const div = document.createElement("div");
+        div.className = "task-card";
+
+        div.innerHTML = `
+          <strong>${t.descricao}</strong>
+          <hr>
+          <small>
+            👤 ${t.app_users.name}
+            ${t.reunioes ? ` |⏱️ ${t.reunioes.name}` : ""}
+          </small>
+          
+          <button class="task-toggle" onclick="toggleTaskDetails(this, ${t.id})">
+            <span class="arrow">▼</span> Detalhes
+          </button>
+          
+          <div class="task-details" id="details-${t.id}">
+            <div class="task-details-top">
+              <div class="tdContents-left">
+                <small>
+                  📅 Prevista: ${formatDateBR(t.data_programada)}<br/>
+                  📌 Conclusão: ${formatDateBR(t.data_finalizada)}
+                </small>
+                <br>
+                <span><strong>${status.toUpperCase()}</strong></span>
+              </div>
+              <div class="tdContents-right">
+                <small>Observações: ${t.observacao || "-"}</small>
+              </div>
+            </div>
+            ${showActions ? `
+                <div class="task-card-footer">
+                  <button class="taskBtn" onclick="finishTask(${t.id})">✅ Concluir</button>
+                  <button class="taskBtn" onclick="cancelTask(${t.id})">🚫 Cancelar</button>
+                  <button class="taskBtn" onclick="changeTaskDate(${t.id}, '${t.data_programada}')">📅 Alterar data</button>
+                  <button class="taskBtn" onclick="editTask(${t.id})">📝 Editar</button>
+                </div>
+              ` : ""}
+          </div>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    function applyTaskFilters() {
+      const search = document.getElementById("taskSearchInput").value.toLowerCase();
+      const status = document.getElementById("taskStatusFilter").value;
+      const user = document.getElementById("taskUserFilter").value;
+      const meeting = document.getElementById("taskMeetingFilter").value;
+
+      // Preserve expanded task details
+      const expandedTasks = new Set();
+      document.querySelectorAll('.task-details.expanded').forEach(el => {
+        const id = el.id.replace('details-', '');
+        expandedTasks.add(id);
+      });
+
+      const filtered = allTasks.filter(t => {
+        const text = `
+          ${t.descricao}
+          ${t.status}
+          ${t.app_users?.name || ''}
+          ${t.reunioes?.name || ''}
+        `.toLowerCase();
+
+        if (search && !text.includes(search)) return false;
+        if (status && t.status !== status) return false;
+        if (user && String(t.owner_id) !== user) return false;
+        if (meeting && String(t.reuniao_id) !== meeting) return false;
+
+        return true;
+      });
+
+      renderTasks(filtered);
+
+      // Restore expanded state
+      expandedTasks.forEach(id => {
+        const details = document.getElementById(`details-${id}`);
+        const button = details?.closest('.task-card').querySelector('.task-toggle');
+        if (details && button) {
+          details.classList.add('expanded');
+          button.classList.add('expanded');
+          const arrow = button.querySelector('.arrow');
+          if (arrow) arrow.style.transform = 'rotate(180deg)';
+        }
+      });
+    }
+
+    window.cancelTask = async function (taskId) {
+      const ok = confirm("Deseja cancelar esta tarefa?");
+      if (!ok) return;
+
+      const hide = showLoading();
+      try {
+        await supabase.from("tasks").update({
+          status: "cancelada"
+        }).eq("id", taskId);
+
+        loadTasks();
+      } finally {
+        hide();
+      }
+    };
+
+    async function normalizeTaskStatuses() {
+      const today = new Date().toISOString().slice(0,10);
+
+      await supabase
+        .from("tasks")
+        .update({ status: "atrasada" })
+        .eq("status", "no prazo")
+        .lt("data_programada", today);
+    }
+
+    window.changeTaskDate = function (taskId, currentDate) {
+      taskDateEditId = taskId;
+
+      const input = document.getElementById("changeTaskDateInput");
+      input.value = currentDate; // YYYY-MM-DD
+
+      document.getElementById("changeTaskDateModal").style.display = "flex";
+    };
+
+    window.closeChangeTaskDateModal = function () {
+      taskDateEditId = null;
+      document.getElementById("changeTaskDateModal").style.display = "none";
+    };
+
+    window.confirmChangeTaskDate = async function () {
+      const input = document.getElementById("changeTaskDateInput");
+      const newDate = input.value;
+
+      if (!newDate) {
+        alert("Selecione uma data válida.");
+        return;
+      }
+
+      const hide = showLoading();
+      try {
+        await supabase
+          .from("tasks")
+          .update({
+            data_programada: newDate,
+            status: "no prazo"
+          })
+          .eq("id", taskDateEditId);
+
+        await normalizeTaskStatuses();
+        closeChangeTaskDateModal();
+        loadTasks();
+      } finally {
+        hide();
+      }
+    };
+
+    window.finishTask = function (taskId) {
+      finishingTaskId = taskId;
+
+      const input = document.getElementById("finishTaskDateInput");
+      input.value = new Date().toISOString().slice(0,10); // today, ISO
+
+      document.getElementById("finishTaskModal").style.display = "flex";
+    };
+
+    window.closeFinishTaskModal = function () {
+      finishingTaskId = null;
+      document.getElementById("finishTaskModal").style.display = "none";
+
+      // clear observations
+      document.getElementById("finishTaskObservacoes").value = "";
+    };
+
+    window.confirmFinishTask = async function () {
+      const input = document.getElementById("finishTaskDateInput");
+      const observacoes = document.getElementById("finishTaskObservacoes").value;
+      const date = input.value;
+
+      if (!date) {
+        alert("Selecione uma data válida.");
+        return;
+      }
+
+      const hide = showLoading();
+      try {
+        await supabase
+          .from("tasks")
+          .update({
+            status: "finalizada",
+            data_finalizada: date,
+            observacao: observacoes
+          })
+          .eq("id", finishingTaskId);
+
+        closeFinishTaskModal();
+        loadTasks();
+      } finally {
+        hide();
+      }
+    };
+
+    window.editTask = async function (taskId) {
+      editingTaskId = taskId;
+
+      document.querySelector("#taskModal .modal-header").textContent = "Editar tarefa";
+
+      const hide = showLoading();
+      try {
+        await populateTaskUsers();
+        await populateTaskReunioes();
+
+        const { data, error } = await supabase
+          .from("tasks")
+          .select(`
+            id,
+            descricao,
+            owner_id,
+            reuniao_id,
+            data_programada
+          `)
+          .eq("id", taskId)
+          .single();
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        // Prefill form
+        taskDescricao.value = data.descricao;
+        taskOwner.value = data.owner_id;
+        taskDateProgramada.value = data.data_programada;
+        taskReuniao.value = data.reuniao_id ?? "";
+      } finally {
+        hide();
+      }
+
+      document.getElementById("taskModal").style.display = "flex";
+    };
+
+    window.toggleTaskDetails = function (button, taskId) {
+      const details = document.getElementById(`details-${taskId}`);
+      const expanded = details.classList.toggle("expanded");
+      button.classList.toggle("expanded", expanded);
+    };
+
+    async function populateTaskFilters(tasks) {
+      const userSel = document.getElementById("taskUserFilter");
+      const meetingSel = document.getElementById("taskMeetingFilter");
+
+      const users = new Map();
+      const meetings = new Map();
+
+      tasks.forEach(t => {
+        if (t.app_users) users.set(t.owner_id, t.app_users.name);
+        if (t.reunioes) meetings.set(t.reuniao_id, t.reunioes.name);
+      });
+
+      userSel.innerHTML = '<option value="">Responsável</option>';
+      users.forEach((name, id) => {
+        userSel.innerHTML += `<option value="${id}">${name}</option>`;
+      });
+
+      meetingSel.innerHTML = '<option value="">Reunião</option>';
+      meetings.forEach((name, id) => {
+        meetingSel.innerHTML += `<option value="${id}">${name}</option>`;
+      });
+    }
+
+    function hideApp() {
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("appRoot").style.display = "none";
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session) {
+      showApp();
+    } else {
+      hideApp();
+    }
+
+    async function showWelcome() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user?.email) return;
+
+      const username = usernameFromEmail(user.email);
+
+      document.getElementById("userWelcome").textContent =
+        `Bem-vindo, ${username}`;
+    }
+
+    function usernameFromEmail(email) {
+      return email
+        .split("@")[0]                 // remove domain
+        .replace(/[^a-zA-Z]/g, " ")    // remove dots, numbers, symbols
+        .trim()
+        .split(/\s+/)                  // split into words
+        .map(
+          w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+        )
+        .join(" ");
+    }
+
+
+    async function loadReunioes() {
+      const { data } = await supabase.from("reunioes").select(`
+        id,
+        name,
+        descricao,
+        reuniao_participantes (
+          app_users ( name )
+        )
+      `);
+
+      const picker = document.getElementById("reunioesCardPicker");
+      picker.innerHTML = "";
+
+      data?.forEach((r) => {
+        const d = document.createElement("div");
+        const participantsList = r.reuniao_participantes
+          ?.map((p) => `<p>${p.app_users.name}</p>`)
+          .join("") || "";
+        d.className = "main-card-wrapper";
+        d.innerHTML = `
+                        <div class="top-card-wrapper">
+                          <span class="meeting-id">${r.id}</span>
+                          <span class="meeting-name">${r.name}</span>
+                        </div>
+                        <div class="outer-center-card-wrapper">
+                          <div class="inner-center-card-wrapper">
+                            ${participantsList}
+                          </div>
+                        </div>
+                        <hr>
+                        <div class="bottom-card-wrapper">
+                          <div class="customCheckBoxHolder">
+                            <input class="customCheckBoxInput" id="new-${r.id}" name="footer-${r.id}" type="radio">
+                            <label class="customCheckBoxWrapper" for="new-${r.id}">
+                              <div class="customCheckBox">
+                                <div class="inner">Novo</div>
+                              </div>
+                            </label>
+
+                            <input class="customCheckBoxInput" id="edit-${r.id}" name="footer-${r.id}" type="radio">
+                            <label class="customCheckBoxWrapper" for="edit-${r.id}">
+                              <div class="customCheckBox">
+                                <div class="inner">Editar</div>
+                              </div>
+                            </label>
+
+                            <input class="customCheckBoxInput" id="delete-${r.id}" name="footer-${r.id}" type="radio">
+                            <label class="customCheckBoxWrapper" for="delete-${r.id}">
+                              <div class="customCheckBox">
+                                <div class="inner">Deletar</div>
+                              </div>
+                            </label>
+
+                            <input class="customCheckBoxInput" id="history-${r.id}" name="footer-${r.id}" type="radio">
+                            <label class="customCheckBoxWrapper" for="history-${r.id}">
+                              <div class="customCheckBox">
+                                <div class="inner">Histórico</div>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+                      `;
+        picker.appendChild(d);
+
+        // Clear any previously checked radio in this group
+        d.querySelectorAll(`input[name="footer-${r.id}"]`).forEach(input => {
+          input.checked = false;
+        });
+
+        // Add change listeners with explicit state management
+        const editInput = d.querySelector(`#edit-${r.id}`);
+        const deleteInput = d.querySelector(`#delete-${r.id}`);
+        const newInput = d.querySelector(`#new-${r.id}`);
+        const historyInput = d.querySelector(`#history-${r.id}`);
+
+        
+        historyInput.addEventListener("change", () => {
+          openHistoricoModal(r.id);
+
+          // ✅ UNCHECK after action
+          setTimeout(() => {
+            historyInput.checked = false;
+          }, 0);
+        });
+
+        
+        editInput.addEventListener("change", () => {
+          editarReuniao(r.id);
+        });
+
+        deleteInput.addEventListener("change", () => {
+          deletarReuniao(r.id);
+        });
+
+        newInput.addEventListener("change", () => {
+          startReuniao(r.id, r.name, r.descricao);
+
+          // ✅ UNCHECK after action
+          setTimeout(() => {
+            newInput.checked = false;
+          }, 0);
+        });
+        
+      });
+    }
+
+    let historicoReuniaoId = null;
+
+    window.openHistoricoModal = function (reuniaoId) {
+      historicoReuniaoId = reuniaoId;
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      historicoDateStart.value = today;
+      historicoDateEnd.value = today;
+
+      loadHistoricoByRange();
+
+      document.getElementById("historicoModal").style.display = "flex";
+    };
+
+    
+    window.closeHistoricoModal = function () {
+      document.getElementById("historicoModal").style.display = "none";
+    };
+
+    historicoDateStart.addEventListener("change", loadHistoricoByRange);
+    historicoDateEnd.addEventListener("change", loadHistoricoByRange);
+
+    async function loadHistoricoByRange() {
+      const start = historicoDateStart.value;
+      const end = historicoDateEnd.value;
+
+      if (!start || !end) return;
+
+      const { data, error } = await supabase
+        .from("reuniao_historico")
+        .select("id, created_at, data_reuniao")
+        .eq("reuniao_id", historicoReuniaoId)
+        .gte("data_reuniao", start)
+        .lte("data_reuniao", end)
+        .order("data_reuniao", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      renderHistoricoGroupedByDate(data);
+    }
+
+    function renderHistoricoGroupedByDate(data) {
+      const list = document.getElementById("historicoList");
+      list.innerHTML = "";
+
+      if (!data.length) {
+        list.innerHTML = "<small>Nenhuma reunião no período selecionado</small>";
+        return;
+      }
+
+      const groups = {};
+
+      data.forEach(item => {
+        const date = item.data_reuniao;
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(item);
+      });
+
+      Object.entries(groups).forEach(([date, items]) => {
+        const dateHeader = document.createElement("div");
+        dateHeader.innerHTML = `<strong>📅 ${formatDateBR(date)}</strong>`;
+        dateHeader.style.gridColumn = "1 / -1";
+        list.appendChild(dateHeader);
+
+        items.forEach(h => {
+          const btn = document.createElement("button");
+          btn.className = "taskBtn";
+          btn.textContent = `🕒 ${new Date(h.created_at).toLocaleTimeString()}`;
+          btn.onclick = () => openHistoricoTab(h.id);
+          list.appendChild(btn);
+        });
+      });
+    }
+
+    function openHistoricoTab(historicoId) {
+      const tabId = `historico_${historicoId}`;
+
+      if (rightTabs.tabs[tabId]) {
+        activateRightTab(tabId);
+        return;
+      }
+
+      createRightTab({
+        id: tabId,
+        title: `Histórico`,
+        async render(panel) {
+          await renderHistoricoPanel(panel, historicoId);
+        }
+      });
+
+      activateRightTab(tabId);
+    }
+
+    async function renderHistoricoPanel(panel, historicoId) {
+      const { data } = await supabase
+        .from("reuniao_historico")
+        .select(`
+          id,
+          observacoes,
+          data_reuniao,
+          reuniao_historico_presencas (
+            user_id,
+            presente,
+            app_users ( name )
+          )
+        `)
+        .eq("id", historicoId)
+        .single();
+
+      panel.innerHTML = `
+        <h3>Reunião (${formatDateBR(data.data_reuniao)})</h3>
+
+        <label class="form-label">Observações</label>
+        
+        <textarea
+          class="form-textarea"
+          id="hist-obs-${historicoId}"
+        ></textarea>
+
+
+        <h4>Presença</h4>
+        ${data.reuniao_historico_presencas.map(p => `
+          <label>
+            <input type="checkbox"
+              data-user="${p.user_id}"
+              ${p.presente ? "checked" : ""}>
+            ${p.app_users.name}
+          </label>
+        `).join("")}
+
+        <button class="btn-submit" onclick="saveHistoricoEdit(${historicoId})">
+          Salvar alterações
+        </button>
+      `;
+      
+      const textarea = document.getElementById(`hist-obs-${historicoId}`);
+      textarea.value = data.observacoes || "";
+
+    }
+
+    window.saveHistoricoEdit = async function (historicoId) {
+      const obs = document.getElementById(`hist-obs-${historicoId}`).value;
+
+      const hide = showLoading();
+      try {
+        await supabase
+          .from("reuniao_historico")
+          .update({ observacoes: obs })
+          .eq("id", historicoId);
+
+        const checks = document.querySelectorAll(
+          `[id^="hist-obs-${historicoId}"] ~ label input`
+        );
+
+        const updates = [...checks].map(chk => ({
+          historico_id: historicoId,
+          user_id: chk.dataset.user,
+          presente: chk.checked,
+          industry_id: currentUserContext.industry_id
+        }));
+
+        await supabase
+          .from("reuniao_historico_presencas")
+          .upsert(updates, { onConflict: ["historico_id", "user_id"] });
+
+        alert("Histórico atualizado ✅");
+      } finally {
+        hide();
+      }
+    };
+
+
+
+    function filterReunioes(searchTerm) {
+      const cards = document.querySelectorAll('.main-card-wrapper');
+      const term = searchTerm.toLowerCase().trim();
+
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(term)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Add event listener for search input
+    document.getElementById('searchReunioes').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        const term = this.value.trim();
+        if (term === '') {
+          // Show all cards if search is empty
+          const cards = document.querySelectorAll('.main-card-wrapper');
+          cards.forEach(card => card.style.display = '');
+        } else {
+          filterReunioes(term);
+        }
+      }
+    });
+
+    async function startReuniao(id, name, descricao) {
+
+      const tabId = "reuniao_" + id;
+
+      // If tab already exists, just activate it
+      if (rightTabs.tabs[tabId]) {
+        activateRightTab(tabId);
+        return;
+      }
+
+      // ONLY reset state when creating a NEW tab
+      meetingTabState[id] = {
+        historicoId: null,
+        locked: false
+      };
+
+      createRightTab({
+        id: "reuniao_" + id,
+        title: "REUNIÃO " + id,
+        async render(panel) {
+          panel.innerHTML = `
+            <h3>${name}</h3>
+            
+            <div>
+              <div id="resume-${id}" class="meeting-resume">
+                ${descricao.replace(/\n/g, "<br>")}
+              </div>
+
+              <button
+                id="resume-toggle-${id}"
+                class="meeting-resume-toggle"
+                onclick="toggleMeetingResume(${id})"
+              >
+                Mostrar mais
+              </button>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button class="taskBtn" onclick="openNewTaskModalFromMeeting(${id})">
+                ➕ Nova tarefa desta reunião
+              </button>
+
+              <button class="taskBtn" onclick="openTasksWithMeetingFilter(${id})">
+                📋 Ver tarefas desta reunião
+              </button>
+            </div>
+
+            <label class="form-label">Observações da reunião</label>
+            <textarea 
+              class="form-textarea" 
+              id="obs-${id}"
+              placeholder="Anotações livres da reunião..."
+            ></textarea>
+
+            <label class="form-label">Data da reunião</label>
+            <input
+              type="date"
+              class="form-input"
+              id="data-reuniao-${id}"
+            />
+
+            <h4>Presença</h4>
+            <div id="presencas-${id}" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+            <button class="btn-submit" style="margin-top:12px;">
+              Salvar reunião
+            </button>
+          `;
+
+          setTimeout(() => {
+            setupMeetingResumeToggle(id);
+          }, 0);
+
+          setTimeout(() => {
+            const dateInput = document.getElementById(`data-reuniao-${id}`);
+            if (dateInput) {
+              dateInput.value = new Date().toISOString().slice(0, 10);
+            }
+          }, 0);
+
+          await loadPresencas(id);
+
+          panel.querySelector(".btn-submit")
+            .addEventListener("click", () => saveHistorico(id));
+        }
+      });
+
+      activateRightTab("reuniao_" + id);
+
+      // Deselect the radio button after action
+      setTimeout(() => {
+        const newInput = document.querySelector(`#new-${id}`);
+        if (newInput) newInput.checked = false;
+      }, 0);
+    }
+
+    window.toggleMeetingResume = function (meetingId) {
+      const resume = document.getElementById(`resume-${meetingId}`);
+      const button = resume.nextElementSibling;
+
+      const expanded = resume.classList.toggle("expanded");
+
+      button.textContent = expanded
+        ? "Mostrar menos"
+        : "Mostrar mais";
+    };
+
+    function setupMeetingResumeToggle(meetingId) {
+      const resume = document.getElementById(`resume-${meetingId}`);
+      const button = document.getElementById(`resume-toggle-${meetingId}`);
+
+      // Force layout calculation
+      const isOverflowing = resume.scrollHeight > resume.clientHeight;
+
+      if (!isOverflowing) {
+        button.style.display = "none";
+      }
+    }
+
+    window.openNewTaskModalFromMeeting = async function (meetingId) {
+      editingTaskId = null;
+
+      document.querySelector("#taskModal .modal-header").textContent =
+        "Nova tarefa da reunião";
+
+      resetTaskForm();
+
+      const hide = showLoading();
+      try {
+        await populateTaskUsers();
+        await populateTaskReunioes();
+      } finally {
+        hide();
+      }
+
+      // ✅ Prefill meeting
+      document.getElementById("taskReuniao").value = String(meetingId);
+
+      document.getElementById("taskModal").style.display = "flex";
+    };
+
+    window.openTasksWithMeetingFilter = function (meetingId) {
+      // Ensure tasks tab exists
+      createTasksTab();
+
+      // Activate tasks tab
+      activateRightTab("tasks");
+
+      // Apply meeting filter
+      const meetingFilter = document.getElementById("taskMeetingFilter");
+      meetingFilter.value = String(meetingId);
+
+      applyTaskFilters();
+    };
+
+    async function loadPresencas(reuniaoId) {
+      const { data, error } = await supabase
+        .from("reuniao_participantes")
+        .select(`
+          user_id,
+          app_users ( name )
+        `)
+        .eq("reuniao_id", reuniaoId);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      const container = document.getElementById(`presencas-${reuniaoId}`);
+      container.innerHTML = "";
+
+      data.forEach(p => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.justifyContent = "space-between";
+
+        row.innerHTML = `
+          <strong>${p.app_users.name}</strong>
+
+          <label class="presence-toggle">
+            <input
+              type="checkbox"
+              data-user="${p.user_id}"
+              ${p.presente ? "checked" : ""}
+            />
+            <span class="toggle-ui"></span>
+            <span class="toggle-label">
+              ${p.presente ? "PRESENTE" : "AUSENTE"}
+            </span>
+          </label>
+        `;
+
+        container.appendChild(row);
+
+        const checkbox = row.querySelector("input[type='checkbox']");
+        const label = row.querySelector(".toggle-label");
+
+        checkbox.addEventListener("change", () => {
+          label.textContent = checkbox.checked ? "PRESENTE" : "AUSENTE";
+        });
+
+      });
+    }
+
+    
+    async function saveHistorico(reuniaoId) {
+      const obs = document.getElementById(`obs-${reuniaoId}`).value;
+      const dataReuniao =
+        document.getElementById(`data-reuniao-${reuniaoId}`).value;
+
+      if (!dataReuniao) {
+        alert("Selecione a data da reunião");
+        return;
+      }
+
+      const saveBtn = document
+        .querySelector(`#obs-${reuniaoId}`)
+        .closest(".right-tab-panel")
+        .querySelector(".btn-submit");
+
+      // ✅ prevent double click spam
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Salvando...";
+
+      const hide = showLoading();
+      try {
+        let historicoId = meetingTabState[reuniaoId]?.historicoId;
+
+        if (historicoId) {
+          /* ======================
+            UPDATE EXISTING
+          ====================== */
+          await supabase
+            .from("reuniao_historico")
+            .update({
+              observacoes: obs,
+              data_reuniao: dataReuniao
+            })
+            .eq("id", historicoId);
+
+        } else {
+          /* ======================
+            CREATE ONCE
+          ====================== */
+          const { data, error } = await supabase
+            .from("reuniao_historico")
+            .insert({
+              reuniao_id: reuniaoId,
+              observacoes: obs,
+              data_reuniao: dataReuniao,
+              industry_id: currentUserContext.industry_id
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          historicoId = data.id;
+
+          // ✅ STORE STATE
+          meetingTabState[reuniaoId] = { historicoId };
+        }
+
+        /* ======================
+          PRESENÇAS (UPSERT)
+        ====================== */
+        const checks = document.querySelectorAll(
+          `#presencas-${reuniaoId} input[type="checkbox"]`
+        );
+
+        const presencas = [...checks].map(chk => ({
+          historico_id: historicoId,
+          user_id: chk.dataset.user,
+          presente: chk.checked,
+          industry_id: currentUserContext.industry_id
+        }));
+
+        await supabase
+          .from("reuniao_historico_presencas")
+          .upsert(presencas, {
+            onConflict: ["historico_id", "user_id"]
+          });
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Salvar reunião";
+
+        alert("Reunião salva ✅");
+      } catch (error) {
+        alert(error.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Salvar reunião";
+      } finally {
+        hide();
+      }
+    }
+
+    async function editarReuniao(id) {
+      editingReuniaoId = id;
+
+      // Load users list first
+      const hide = showLoading();
+      try {
+        await populateUsersPicker();
+
+        const { data, error } = await supabase
+          .from("reunioes")
+          .select(`
+            name,
+            descricao,
+            reuniao_participantes (
+              user_id
+            )
+          `)
+          .eq("id", id)
+          .single();
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        // Fill form fields
+        reuniaoName.value = data.name;
+        reuniaoDescricao.value = data.descricao;
+
+        // Select participants
+        const selectedIds = data.reuniao_participantes.map(
+          p => String(p.user_id)
+        );
+
+        [...reuniaoUsersPicker.options].forEach(opt => {
+          opt.selected = selectedIds.includes(opt.value);
+        });
+
+        syncUsersCheckboxUI();
+      } finally {
+        hide();
+      }
+
+      document.getElementById("addReuniaoModal").style.display = "flex";
+
+      // Deselect the radio button after action
+      setTimeout(() => {
+        const editInput = document.querySelector(`#edit-${id}`);
+        if (editInput) editInput.checked = false;
+      }, 0);
+    }
+
+    async function deletarReuniao(id) {
+      const ok = confirm("Tem certeza que deseja deletar esta reunião?");
+      if (!ok) return;
+
+      // Delete links first (FK safety)
+      await supabase
+        .from("reuniao_participantes")
+        .delete()
+        .eq("reuniao_id", id);
+
+      // Delete meeting
+      const { error } = await supabase
+        .from("reunioes")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      loadReunioes();
+    }
+
+    window.addReuniao = async () => {
+      editingReuniaoId = null;
+
+      const hide = showLoading();
+      try {
+        await populateUsersPicker();
+      } finally {
+        hide();
+      }
+
+      document.getElementById("addReuniaoModal").style.display = "flex";
+    };
+
+    async function populateUsersPicker() {
+      const { data } = await supabase
+        .from("app_users")
+        .select("*")
+        .order("name");
+      const sel = document.getElementById("reuniaoUsersPicker");
+      sel.innerHTML = "";
+      data?.forEach((u) => {
+        const o = document.createElement("option");
+        o.value = u.id;
+        o.text = u.name;
+        sel.appendChild(o);
+      });
+
+      syncUsersCheckboxUI();
+    }
+
+    window.addNewUser = async () => {
+      const name = prompt("Nome do usuário:");
+      if (!name) return;
+      await supabase.from("app_users").insert({ 
+          name: name.toUpperCase(),
+          industry_id: currentUserContext.industry_id
+        });
+      populateUsersPicker();
+    };
+
+    // window.deleteSelectedUsers = async () => {
+    //   const sel = document.getElementById("reuniaoUsersPicker");
+    //   const ids = [...sel.selectedOptions].map((o) => o.value);
+    //   if (!ids.length) return;
+    //   await supabase.from("app_users").delete().in("id", ids);
+    //   populateUsersPicker();
+    // };
+
+    document
+      .getElementById("addReuniaoForm")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const participantes =
+          [...reuniaoUsersPicker.selectedOptions].map(o => o.value);
+
+        const hide = showLoading();
+        try {
+          if (editingReuniaoId) {
+            /* ===================
+              EDIT (UPDATE)
+            =================== */
+
+            await supabase
+              .from("reunioes")
+              .update({
+                name: reuniaoName.value,
+                descricao: reuniaoDescricao.value,
+              })
+              .eq("id", editingReuniaoId);
+
+            // Remove old links
+            await supabase
+              .from("reuniao_participantes")
+              .delete()
+              .eq("reuniao_id", editingReuniaoId);
+
+            // Insert new links
+            const links = participantes.map(uid => ({
+              reuniao_id: editingReuniaoId,
+              user_id: uid,
+            }));
+
+            if (links.length) {
+              await supabase.from("reuniao_participantes").insert(links);
+            }
+
+            editingReuniaoId = null;
+
+          } else {
+            /* ===================
+              CREATE (INSERT)
+            =================== */
+
+            const { data: reuniao } = await supabase
+              .from("reunioes")
+              .insert({
+                name: reuniaoName.value,
+                descricao: reuniaoDescricao.value,
+                industry_id: currentUserContext.industry_id
+              })
+              .select()
+              .single();
+
+            const links = participantes.map(uid => ({
+              reuniao_id: reuniao.id,
+              user_id: uid,
+            }));
+
+            await supabase.from("reuniao_participantes").insert(links);
+          }
+
+          e.target.reset();
+          document.getElementById("addReuniaoModal").style.display = "none";
+          loadReunioes();
+        } finally {
+          hide();
+        }
+      });
+
+    window.openReuniaoDetails = async function (id) {
+      const { data, error } = await supabase
+        .from("reunioes")
+        .select(`
+          name,
+          descricao,
+          reuniao_participantes (
+            app_users ( name )
+          )
+        `)
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert(
+        `Nome: ${data.name}\n` +
+          `Descrição: ${data.descricao}\n` +
+          `Participantes: ${
+            data.reuniao_participantes.map((p) => p.app_users.name).join(", ")
+          }`
+      );
+    };
+
+    // loadReunioes();
+
+    // Fit font size to meeting-id spans
+    function fitMeetingIdFont() {
+      document.querySelectorAll(".meeting-id").forEach((el) => {
+        let fontSize = 32;
+        el.style.fontSize = fontSize + "px";
+        
+        while (el.scrollWidth > 50 && fontSize > 8) {
+          fontSize -= 2;
+          el.style.fontSize = fontSize + "px";
+        }
+      });
+    }
+
+    function createRightTab({ id, title, render }) {
+
+      if (rightTabs.tabs[id]) return;
+
+      const header = document.getElementById("rightTabsHeader");
+      const body = document.getElementById("rightTabsBody");
+
+      // Tab button and close button
+      const tabDiv = document.createElement("div");
+      tabDiv.className = "right-tab-header";
+
+      // TAB Button
+      const btn = document.createElement("button");
+      btn.textContent = title;
+      btn.onclick = () => activateRightTab(id);
+      
+      btn.style.whiteSpace = "nowrap";
+      btn.style.padding = "6px 10px";
+      btn.style.fontWeight = "bold";
+      btn.style.background = "transparent";
+      btn.style.border = "none";
+      btn.style.cursor = "pointer";
+      btn.style.color = "#fff";
+      btn.style.maxWidth = "160px";
+      btn.style.overflow = "hidden";
+      btn.style.textOverflow = "ellipsis";
+
+
+      // CLOSE Button
+      const closeBtn = document.createElement("button");
+      closeBtn.textContent = "×";
+      closeBtn.style.background = "rgb(223, 8, 16)";
+      closeBtn.style.color = "#fff";
+      closeBtn.style.border = "none";
+      closeBtn.style.borderRadius = "4px";
+      closeBtn.style.width = "24px";
+      closeBtn.style.height = "24px";
+      closeBtn.style.padding = "0";
+      closeBtn.style.marginLeft = "8px";
+      closeBtn.style.marginRight = "8px";
+      closeBtn.style.cursor = "pointer";
+      closeBtn.style.fontSize = "18px";
+      closeBtn.style.fontWeight = "bold";
+      closeBtn.style.lineHeight = "1";
+      closeBtn.style.display = "flex";
+      closeBtn.style.alignItems = "center";
+      closeBtn.style.justifyContent = "center";
+      closeBtn.style.transition = "all 0.2s ease";
+      closeBtn.onmouseover = () => {
+        closeBtn.style.background = "rgba(223, 8, 16, 0.8)";
+        closeBtn.style.transform = "scale(1.15)";
+      };
+      closeBtn.onmouseout = () => {
+        closeBtn.style.background = "rgb(223, 8, 16)";
+        closeBtn.style.transform = "scale(1)";
+      };
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        header.removeChild(tabDiv);
+        body.removeChild(panel);
+        delete rightTabs.tabs[id];
+        if (rightTabs.current === id) {
+          rightTabs.current = null;
+        }
+      };
+
+      tabDiv.appendChild(btn);
+      tabDiv.appendChild(closeBtn);
+      header.appendChild(tabDiv);
+
+      // Panel
+      const panel = document.createElement("section");
+      panel.className = "right-tab-panel";
+      panel.dataset.tab = id;
+      body.appendChild(panel);
+
+      // Render ONCE
+      render(panel);
+
+      rightTabs.tabs[id] = { btn, panel, tabDiv };
+    }
+
+    function activateRightTab(id) {
+      Object.values(rightTabs.tabs).forEach(t => {
+        t.btn.classList.remove("active");
+        t.panel.classList.remove("active");
+        t.tabDiv.classList.remove("active");
+      });
+
+      rightTabs.tabs[id].btn.classList.add("active");
+      rightTabs.tabs[id].panel.classList.add("active");
+      rightTabs.tabs[id].tabDiv.classList.add("active");
+      rightTabs.current = id;
+    }
+
+    document.addEventListener("input", e => {
+      if (e.target.matches("input[type='text'], textarea")) {
+        e.target.value = e.target.value.toUpperCase();
+      }
+    });
+
+    // Run after loadReunioes completes
+    setTimeout(fitMeetingIdFont, 100);
+  </script>
+</body>
+</html>
